@@ -95,7 +95,30 @@
 
             </div>
 
-            <!-- Catalog -->
+            <!-- Live metrics loaded from the MySQL database through the Servlet API -->
+            <div class="row g-4 mb-5">
+                <div class="col-12">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0">Live Sustainability Metrics</h4>
+                        </div>
+                        <div class="card-body">
+                            <div id="campusMetricsContainer">
+                                <div class="alert alert-info mb-0" role="status">
+                                    Live campus metrics will load from the database.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-secondary" role="note">
+                The cards below are illustrative category examples. For database-backed values, use the
+                <strong>Live Sustainability Metrics</strong> panel above, which loads records from MySQL when the backend is available.
+            </div>
+
+            <!-- Illustrated catalog overview -->
 
             <div class="row g-4 catalog-grid">
 
@@ -356,8 +379,10 @@
     <!-- Bootstrap JS -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/script.js"></script>
+    <script src="js/live-metrics.js"></script>
 
 </body>
 

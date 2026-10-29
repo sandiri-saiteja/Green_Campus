@@ -107,11 +107,12 @@
                         <h4 class="mb-0">Campus Sustainability</h4>
                     </div>
                     <div class="card-body">
-                        <div class="mb-4"><div class="d-flex justify-content-between"><span>Renewable Energy</span><strong>82%</strong></div><div class="progress mt-2"><div class="progress-bar bg-success" style="width:82%"></div></div></div>
-                        <div class="mb-4"><div class="d-flex justify-content-between"><span>Water Conservation</span><strong>65%</strong></div><div class="progress mt-2"><div class="progress-bar bg-info" style="width:65%"></div></div></div>
-                        <div class="mb-4"><div class="d-flex justify-content-between"><span>Waste Recycling</span><strong>74%</strong></div><div class="progress mt-2"><div class="progress-bar bg-warning" style="width:74%"></div></div></div>
-                        <div class="mb-4"><div class="d-flex justify-content-between"><span>Carbon Reduction</span><strong>58%</strong></div><div class="progress mt-2"><div class="progress-bar bg-danger" style="width:58%"></div></div></div>
-                        <a href="catalog.html" class="btn btn-outline-success w-100">View Full Metrics Catalog</a>
+                        <div id="campusMetricsContainer">
+                            <div class="alert alert-info mb-0" role="status">
+                                Live campus metrics will load from the database.
+                            </div>
+                        </div>
+                        <a href="catalog.html" class="btn btn-outline-success w-100 mt-3">View Full Metrics Catalog</a>
                     </div>
                 </div>
             </div>
@@ -189,8 +190,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/script.js"></script>
+<script src="js/live-metrics.js"></script>
 <script type="module" src="js/weather.js"></script>
 </body>
 </html>

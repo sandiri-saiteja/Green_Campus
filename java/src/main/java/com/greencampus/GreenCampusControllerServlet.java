@@ -39,7 +39,7 @@ public class GreenCampusControllerServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        applyCors(response);
+        applyCors(request, response);
         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     }
 
@@ -48,7 +48,7 @@ public class GreenCampusControllerServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        applyCors(response);
+        applyCors(request, response);
 
         try {
             String[] path = pathParts(request);
@@ -125,10 +125,13 @@ public class GreenCampusControllerServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        applyCors(response);
+        applyCors(request, response);
 
         try {
             String[] path = pathParts(request);
+            if (isCrudCollection(path) && !authorizeAdminMutation(request, response)) {
+                return;
+            }
             FormData form = new FormData(request);
 
             if (path.length == 1 && "register".equals(path[0])) {
@@ -192,6 +195,8 @@ public class GreenCampusControllerServlet extends HttpServlet {
         String department = form.required("department");
         String campus = form.required("campus");
         String password = form.required("password");
+
+        validateRegistration(name, userCode, email, department, campus, password);
 
         if (userDAO.emailExists(email)) {
             sendError(response,
@@ -303,10 +308,16 @@ private void saveReport(
 
         String description = form.required("description");
 
-        GreenCampusServletService.requirePositive(
-                value,
-                "value"
-        );
+        GreenCampusServletService.requirePositive(value, "value");
+        if (metric.length() > 100) {
+            throw new IllegalArgumentException("Metric name must be 100 characters or fewer.");
+        }
+        if (description.length() > 500) {
+            throw new IllegalArgumentException("Description must be 500 characters or fewer.");
+        }
+        if (date.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Report date cannot be in the future.");
+        }
 
         int reportId = reportDAO.createReport(
                 email,
@@ -345,10 +356,13 @@ private void saveReport(
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        applyCors(response);
+        applyCors(request, response);
 
         try {
             String[] path = pathParts(request);
+            if (isCrudCollection(path) && !authorizeAdminMutation(request, response)) {
+                return;
+            }
             if (path.length != 2) {
                 sendError(response, HttpServletResponse.SC_BAD_REQUEST,
                         "PUT requires an ID in the URL.");
@@ -416,10 +430,13 @@ private void saveReport(
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
-        applyCors(response);
+        applyCors(request, response);
 
         try {
             String[] path = pathParts(request);
+            if (isCrudCollection(path) && !authorizeAdminMutation(request, response)) {
+                return;
+            }
             if (path.length != 2) {
                 sendError(response, HttpServletResponse.SC_BAD_REQUEST,
                         "DELETE requires an ID in the URL.");
@@ -533,11 +550,95 @@ private void saveReport(
         return path.substring(1).split("/");
     }
 
-    private void applyCors(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    private void applyCors(HttpServletRequest request, HttpServletResponse response) {
+        String origin = request.getHeader("Origin");
+        String configuredOrigins = System.getenv("GREEN_CAMPUS_ALLOWED_ORIGINS");
+
+        // Safe local-development defaults. Set GREEN_CAMPUS_ALLOWED_ORIGINS
+        // to the exact GitHub Pages origin in the cloud deployment.
+        if (configuredOrigins == null || configuredOrigins.isBlank()) {
+            configuredOrigins =
+                    "http://localhost:5500,http://127.0.0.1:5500,http://localhost:8081";
+        }
+
+        if (origin != null) {
+            for (String allowed : configuredOrigins.split(",")) {
+                if (origin.equals(allowed.trim())) {
+                    response.setHeader("Access-Control-Allow-Origin", origin);
+                    response.setHeader("Vary", "Origin");
+                    break;
+                }
+            }
+        }
+
+        response.setHeader("Access-Control-Allow-Headers",
+                "Content-Type, X-Green-Campus-Admin-Key");
         response.setHeader("Access-Control-Allow-Methods",
                 "GET, POST, PUT, DELETE, OPTIONS");
+    }
+
+    private boolean isCrudCollection(String[] path) {
+        if (path.length == 0) {
+            return false;
+        }
+        return "resources".equals(path[0])
+                || "consumption-records".equals(path[0])
+                || "sustainability-metrics".equals(path[0])
+                || "metrics".equals(path[0]);
+    }
+
+    /**
+     * Mutating CRUD endpoints require a server-side admin key. The key must
+     * be configured in the hosting environment and must never be placed in
+     * public frontend JavaScript.
+     */
+    private boolean authorizeAdminMutation(
+            HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+        String expected = System.getenv("GREEN_CAMPUS_ADMIN_API_KEY");
+        if (expected == null || expected.isBlank()) {
+            sendError(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "Administrative CRUD writes are disabled until GREEN_CAMPUS_ADMIN_API_KEY is configured.");
+            return false;
+        }
+
+        String supplied = request.getHeader("X-Green-Campus-Admin-Key");
+        if (supplied == null || !java.security.MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.UTF_8),
+                supplied.getBytes(StandardCharsets.UTF_8))) {
+            sendError(response, HttpServletResponse.SC_FORBIDDEN,
+                    "An administrator API key is required for this operation.");
+            return false;
+        }
+        return true;
+    }
+
+    private void validateRegistration(
+            String name,
+            String userCode,
+            String email,
+            String department,
+            String campus,
+            String password) {
+        if (name.length() > 100
+                || !name.matches("^[\\p{L}][\\p{L} .'-]*$")) {
+            throw new IllegalArgumentException("Enter a valid name (maximum 100 characters).");
+        }
+        if (!userCode.matches("^[A-Za-z0-9_-]{3,20}$")) {
+            throw new IllegalArgumentException("ID must contain 3-20 letters, numbers, hyphens or underscores.");
+        }
+        if (email.length() > 150
+                || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")) {
+            throw new IllegalArgumentException("Enter a valid email address.");
+        }
+        if (department.length() > 100 || campus.length() > 100) {
+            throw new IllegalArgumentException("Department and campus must be 100 characters or fewer.");
+        }
+        if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
+            throw new IllegalArgumentException(
+                    "Password must be at least 8 characters and include uppercase, lowercase, a number and a special character."
+            );
+        }
     }
 
     private void sendJson(HttpServletResponse response, int status, String body)

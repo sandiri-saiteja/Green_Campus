@@ -1,63 +1,37 @@
 # Green Campus Database Setup
 
-This folder recreates the complete MySQL database needed by the existing Green Campus project.
+## Choose the correct SQL file
 
-## 1. Create the database
+- **Local reset/testing:** `green_campus.sql` creates `green_campus`, drops existing project tables, recreates them, and inserts sample rows. It is destructive: do not run it if you need to keep existing records.
+- **Cloud/managed MySQL:** `green_campus_cloud.sql` creates the tables in the database you have already selected and inserts sample rows with `INSERT IGNORE`. It does not create a database or drop existing tables. Use it with a new/empty application database.
 
-Open MySQL Workbench or the MySQL command line and run:
+The schema contains:
 
-```sql
-SOURCE C:/path/to/Kothii/database/green_campus.sql;
-```
+- `users` — registration/login accounts
+- `resources` — resources for the Java CRUD experiment
+- `consumption_records` — resource consumption
+- `sustainability_metrics` — sustainability metric records
+- `sustainability_reports` — reports submitted through the website
 
-Or open `green_campus.sql` in MySQL Workbench and execute the complete script.
+## Local configuration
 
-The script creates:
+The Java application reads these settings:
 
-- `users` — web registration/login accounts
-- `resources` — Java CRUD resources
-- `consumption_records` — Java CRUD consumption records
-- `sustainability_metrics` — Java CRUD sustainability metrics
-- `sustainability_reports` — web report submissions linked to users
+- `GREEN_CAMPUS_DB_URL` — optional full JDBC URL; defaults to the local `green_campus` database
+- `GREEN_CAMPUS_DB_USER` — optional; defaults to `root`
+- `GREEN_CAMPUS_DB_PASSWORD` — required password, read from the environment
+- `GREEN_CAMPUS_ALLOWED_ORIGINS` — optional comma-separated browser origins allowed to call the Servlet API
+- `GREEN_CAMPUS_ADMIN_API_KEY` — required for Servlet CRUD write operations on resources, consumption records, and sustainability metrics
 
-It also inserts sample rows for the existing Java CRUD stage.
+You can also provide database URL/user/password as Java system properties, as described in `DBConnection.java`. Do not commit passwords or admin keys to GitHub.
 
-## 2. Configure the MySQL password
+## Local frontend and backend addresses
 
-From PowerShell, inside `Kothii/java`:
+There are two backend entry points in this project:
 
-```powershell
-$env:GREEN_CAMPUS_DB_PASSWORD="YOUR_MYSQL_PASSWORD"
-```
+- **Servlet web application on Tomcat:** `http://localhost:8081/green-campus/api`. This is the API configured for the registration, login, reports, and live-metrics frontend.
+- **Standalone `ApiServer` experiment:** runs separately on its configured local port (currently 8080) and is for the standalone HTTP-server experiment. It is not the API base used by `js/api.js`.
 
-The project connects with MySQL user `root` and database `green_campus`.
+The frontend's `js/config.js` selects the local Tomcat API URL while running on `localhost` or `127.0.0.1`. When deployed on GitHub Pages, update its cloud URL placeholder after you deploy the backend publicly.
 
-## 3. Compile
-
-```powershell
-mvn clean compile
-```
-
-## 4. Start the web database API
-
-```powershell
-mvn exec:java "-Dexec.mainClass=com.greencampus.ApiServer"
-```
-
-Keep that terminal open. The API runs at:
-
-`http://localhost:8080`
-
-Test it in the browser:
-
-`http://localhost:8080/api/health`
-
-You should receive a JSON success message.
-
-## 5. Start the website
-
-Use the same VS Code Live Server workflow used in the previous stages and open `index.html`.
-
-The existing UI, Bootstrap design, CSS3/Flexbox/Grid work, JavaScript validation, ES6 weather module, Chart.js graphs, and XML/DTD/XSD files remain in the project.
-
-Registration and Login now use the Java API and store account data in MySQL. The report form also saves submissions to MySQL. Only a safe user profile is kept in browser `localStorage`; the password is not stored there.
+For public hosting steps, see the repository's `DEPLOYMENT_GUIDE.md`.

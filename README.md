@@ -14,6 +14,8 @@ The project brings together responsive website design, form validation, weather 
 
 > **Project status:** This document describes the project's overall scope and intended capabilities. Individual features should be considered complete only after they have been checked in the actual application and tested in the intended environment.
 
+> **Deployment note:** GitHub Pages serves the static frontend only. See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for the corrected live-metrics integration, environment-based database configuration, and the steps required to host the Java/Tomcat backend publicly.
+
 ## 🎯 Problem Statement
 
 Universities and campuses use electricity, water, and other resources every day. Waste management and environmental conditions also affect a campus's sustainability performance. When this information is scattered across different records or systems, it can be difficult to view the overall picture, compare indicators, or communicate findings clearly.
@@ -43,7 +45,7 @@ The portal provides a single web-based interface for sustainability metrics and 
 | 🌱 Sustainability metrics | Organises indicators related to campus electricity, water, waste, and other sustainability measures. The exact indicators depend on the data provided by the project. |
 | 💧 Resource management | Represents resources tracked by the campus and supports the intended creation, viewing, updating, and removal of records. |
 | ⚡ Consumption records | Organises resource-consumption information so it can be reviewed as part of sustainability reporting. |
-| 📊 Reports and visual presentation | Aims to make sustainability information easier to interpret through organised summaries, metric displays, and charts where configured. |
+| 📊 Reports and visual presentation | Shows a live metrics panel populated from the Java Servlet API when the backend and MySQL database are configured; charts provide additional environmental context. |
 | 🌦️ Weather context | Uses the intended external weather-data integration to provide environmental context for the displayed information. Weather access depends on an internet connection and the external service being available. |
 | 👤 User access | Includes registration and login as part of the project's intended user-facing workflow. Authentication and access controls require end-to-end testing. |
 | ✅ Form validation | Helps users identify missing or incorrectly formatted information before submitting a form. Browser-side validation does not replace backend validation. |
@@ -97,7 +99,7 @@ Introduces browser-side checks for required information, email formats, input le
 
 ### 🌦️ Experiment 4 — ES6 Weather Integration and Charts
 
-Uses modern JavaScript concepts to retrieve weather information from an external service and present environmental conditions graphically alongside sustainability indicators. This area depends on a successful external request and appropriate chart configuration.
+Uses modern JavaScript concepts to retrieve weather information from an external service and present environmental conditions graphically. The Reports and Metrics pages also request sustainability metric records from the Java Servlet API, so those records come from MySQL when the backend is deployed and configured.
 
 **Learning outcome:** Understand asynchronous data retrieval, external APIs, and visual interpretation of environmental information.
 
