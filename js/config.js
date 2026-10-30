@@ -14,7 +14,7 @@
         window.location.hostname === "127.0.0.1";
 
     const LOCAL_API_BASE = "http://localhost:8081/green-campus/api";
-    const CLOUD_API_BASE = "https://YOUR-BACKEND-HOST/green-campus/api";
+    const CLOUD_API_BASE = "https://green-campus-api-x0fc.onrender.com/green-campus/api";
 
     window.GREEN_CAMPUS_API_BASE =
         isLocalDevelopment ? LOCAL_API_BASE : CLOUD_API_BASE;
